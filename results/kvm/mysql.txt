@@ -1,0 +1,4 @@
+# MySQL OLTP Benchmark — KVM (QEMU-KVM, Ubuntu 22.04 guest)
+# Date: Fri 24 Apr 13:21:14 IST 2026
+
+# SKIPPED: VM_IP not available.

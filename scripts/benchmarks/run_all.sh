@@ -20,6 +20,8 @@ section() { echo -e "\n${CYAN}━━━━━━━━━━━━━━━━�
             echo -e "${CYAN}  $*${NC}" | tee -a "$LOG_FILE"
             echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}" | tee -a "$LOG_FILE"; }
 
+mkdir -p "$RESULTS_DIR"
+: > "$LOG_FILE"
 START_TIME=$(date +%s)
 
 section "Container vs. VM Benchmark Suite"

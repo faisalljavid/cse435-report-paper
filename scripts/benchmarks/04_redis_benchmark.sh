@@ -13,6 +13,9 @@
 set -euo pipefail
 
 RESULTS_DIR="$(cd "$(dirname "$0")/../../results" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/common.sh"
 VM_IP="${VM_IP:-$(cat /tmp/vm_ip.txt 2>/dev/null || echo '')}"
 VM_USER="bench"
 
@@ -118,7 +121,7 @@ echo "# Redis Benchmark — Docker (redis:7-alpine, host networking)" > "$OUT"
 echo "# Date: $(date)" >> "$OUT"
 echo "" >> "$OUT"
 
-docker rm -f redis_bench 2>/dev/null || true
+docker rm -f redis_bench >/dev/null 2>&1 || true
 log "Starting Redis container with host networking on port $DOCKER_HOST_PORT..."
 docker run -d --name redis_bench --network host \
     redis:7-alpine redis-server --port "$DOCKER_HOST_PORT" --save "" --appendonly no >/dev/null
@@ -142,7 +145,7 @@ echo "# Redis Benchmark — Docker (redis:7-alpine, NAT networking)" > "$OUT"
 echo "# Date: $(date)" >> "$OUT"
 echo "" >> "$OUT"
 
-docker rm -f redis_bench_nat 2>/dev/null || true
+docker rm -f redis_bench_nat >/dev/null 2>&1 || true
 docker run -d --name redis_bench_nat \
     --network benchmark_net \
     -p "${DOCKER_NAT_PORT}:6379" \
@@ -158,7 +161,7 @@ echo "" >> "$OUT"
 echo "=== Pipeline depth: 16 ===" >> "$OUT"
 run_redis_pipeline_bench "127.0.0.1" "$DOCKER_NAT_PORT" 16 >> "$OUT" 2>&1
 
-docker rm -f redis_bench_nat 2>/dev/null || true
+docker rm -f redis_bench_nat >/dev/null 2>&1 || true
 log "Docker NAT results saved to $OUT"
 
 # --------------------------------------------------------------------------- #
@@ -175,7 +178,8 @@ if [[ -z "$VM_IP" ]]; then
     echo "# SKIPPED: VM_IP not available." >> "$OUT"
 else
     log "Running KVM Redis benchmark (VM: $VM_IP)..."
-    ssh -o StrictHostKeyChecking=no "${VM_USER}@${VM_IP}" \
+    check_vm_ssh_ready "$VM_IP"
+    run_vm_ssh "$VM_IP" \
         "redis-benchmark \
             -h 127.0.0.1 \
             -n $REQUESTS \
@@ -190,7 +194,7 @@ else
     log "KVM results saved to $OUT"
 fi
 
-docker rm -f redis_bench 2>/dev/null || true
+docker rm -f redis_bench >/dev/null 2>&1 || true
 
 log ""
 log "=== Redis benchmark complete ==="

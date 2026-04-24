@@ -12,6 +12,9 @@
 set -euo pipefail
 
 RESULTS_DIR="$(cd "$(dirname "$0")/../../results" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/common.sh"
 VM_IP="${VM_IP:-$(cat /tmp/vm_ip.txt 2>/dev/null || echo '')}"
 VM_USER="bench"
 STREAM_BIN="/usr/local/bin/stream_benchmark"
@@ -28,7 +31,7 @@ run_memory_native() {
         sysbench memory \
             --memory-block-size=1M \
             --memory-total-size=100G \
-            --memory-operation=write \
+            --memory-oper=write \
             --threads=4 \
             run
     fi
@@ -38,7 +41,7 @@ run_memory_sysbench() {
     sysbench memory \
         --memory-block-size=1M \
         --memory-total-size=100G \
-        --memory-operation=write \
+        --memory-oper=write \
         --threads=4 \
         run
 }
@@ -54,7 +57,7 @@ run_memory_docker() {
                   sysbench memory \
                       --memory-block-size=1M \
                       --memory-total-size=100G \
-                      --memory-operation=write \
+                      --memory-oper=write \
                       --threads=4 \
                       run"
 }
@@ -103,8 +106,8 @@ if [[ -z "$VM_IP" ]]; then
     echo "# SKIPPED: VM_IP not available." >> "$OUT"
 else
     log "Running KVM memory benchmark (VM: $VM_IP)..."
-    ssh -o StrictHostKeyChecking=no \
-        "${VM_USER}@${VM_IP}" \
+    check_vm_ssh_ready "$VM_IP"
+    run_vm_ssh "$VM_IP" \
         "$(declare -f run_memory_sysbench); run_memory_sysbench" >> "$OUT" 2>&1
     log "KVM results saved to $OUT"
 fi

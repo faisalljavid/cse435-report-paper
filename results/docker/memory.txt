@@ -1,3 +1,42 @@
 # Memory Bandwidth Benchmark — Docker (ubuntu:22.04)
-# Date: Fri 24 Apr 11:15:22 IST 2026
+# Date: Fri 24 Apr 14:16:46 IST 2026
+# Tool: sysbench memory (portable container path)
+
+debconf: delaying package configuration, since apt-utils is not installed
+sysbench 1.0.20 (using system LuaJIT 2.1.0-beta3)
+
+Running the test with following options:
+Number of threads: 4
+Initializing random number generator from current time
+
+
+Running memory speed test with the following options:
+  block size: 1024KiB
+  total size: 102400MiB
+  operation: write
+  scope: global
+
+Initializing worker threads...
+
+Threads started!
+
+Total operations: 102400 (127039.93 per second)
+
+102400.00 MiB transferred (127039.93 MiB/sec)
+
+
+General statistics:
+    total time:                          0.8054s
+    total number of events:              102400
+
+Latency (ms):
+         min:                                    0.03
+         avg:                                    0.03
+         max:                                    0.26
+         95th percentile:                        0.05
+         sum:                                 3206.67
+
+Threads fairness:
+    events (avg/stddev):           25600.0000/0.00
+    execution time (avg/stddev):   0.8017/0.00
 

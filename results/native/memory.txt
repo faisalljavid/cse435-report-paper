@@ -1,5 +1,5 @@
 # Memory Bandwidth Benchmark — Native (Bare Metal)
-# Date: Fri 24 Apr 11:15:22 IST 2026
+# Date: Fri 24 Apr 14:16:46 IST 2026
 # Tool: STREAM (array size 10M doubles) or sysbench memory fallback
 
 -------------------------------------------------------------
@@ -18,8 +18,8 @@ Number of Threads requested = 16
 Number of Threads counted = 16
 -------------------------------------------------------------
 Your clock granularity/precision appears to be 1 microseconds.
-Each test below will take on the order of 8963 microseconds.
-   (= 8963 clock ticks)
+Each test below will take on the order of 9774 microseconds.
+   (= 9774 clock ticks)
 Increase the size of the arrays if this shows that
 you are not getting at least 20 clock ticks per test.
 -------------------------------------------------------------
@@ -28,10 +28,10 @@ For best results, please be sure you know the
 precision of your system timer.
 -------------------------------------------------------------
 Function    Best Rate MB/s  Avg time     Min time     Max time
-Copy:           14779.4     0.013253     0.010826     0.018762
-Scale:          14308.6     0.012627     0.011182     0.015058
-Add:            16349.9     0.015697     0.014679     0.019969
-Triad:          16241.5     0.015861     0.014777     0.018304
+Copy:           15383.1     0.010728     0.010401     0.011186
+Scale:          14528.2     0.011181     0.011013     0.011498
+Add:            16792.6     0.014585     0.014292     0.015201
+Triad:          16245.7     0.014887     0.014773     0.015188
 -------------------------------------------------------------
 Solution Validates: avg error less than 1.000000e-13 on all three arrays
 -------------------------------------------------------------

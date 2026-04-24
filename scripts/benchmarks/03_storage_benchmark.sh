@@ -18,6 +18,9 @@
 set -euo pipefail
 
 RESULTS_DIR="$(cd "$(dirname "$0")/../../results" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/common.sh"
 VM_IP="${VM_IP:-$(cat /tmp/vm_ip.txt 2>/dev/null || echo '')}"
 VM_USER="bench"
 DEFAULT_TEST_FILE_SIZE_BYTES=$((4 * 1024 * 1024 * 1024))
@@ -78,6 +81,11 @@ run_fio_job() {
         --directory="$directory"
 }
 
+cleanup_fio_artifacts() {
+    local directory=$1
+    rm -f "$directory"/rand_read* "$directory"/rand_write* "$directory"/seq_read* "$directory"/seq_write* 2>/dev/null || true
+}
+
 run_fio_docker() {
     local target_dir=$1
     local rw=$2
@@ -114,6 +122,38 @@ run_fio_docker() {
             --group_reporting \
             --output-format=normal \
             --directory='$target_dir'
+        rm -f '$target_dir'/${name}* >/dev/null 2>&1 || true
+    "
+}
+
+run_fio_kvm() {
+    local name=$1
+    local rw=$2
+    run_vm_ssh "$VM_IP" "
+        set -euo pipefail
+        avail_kb=\$(df -Pk /tmp | awk 'NR==2 {print \$4}')
+        avail_bytes=\$((avail_kb * 1024))
+        size_bytes=\$((avail_bytes * $FREE_SPACE_USAGE_PERCENT / 100 / 4))
+        if (( size_bytes > $DEFAULT_TEST_FILE_SIZE_BYTES )); then
+            size_bytes=$DEFAULT_TEST_FILE_SIZE_BYTES
+        fi
+        if (( size_bytes < $MIN_TEST_FILE_SIZE_BYTES )); then
+            size_bytes=$MIN_TEST_FILE_SIZE_BYTES
+        fi
+        fio \
+            --name=$name \
+            --rw=$rw \
+            --bs=4k \
+            --direct=1 \
+            --numjobs=4 \
+            --iodepth=32 \
+            --size=\$((size_bytes / 1024 / 1024))M \
+            --runtime=$RUNTIME \
+            --time_based \
+            --group_reporting \
+            --output-format=normal \
+            --directory=/tmp
+        rm -f /tmp/${name}* >/dev/null 2>&1 || true
     "
 }
 
@@ -133,26 +173,31 @@ TMPDIR=$(mktemp -d)
 trap 'rm -rf "$TMPDIR"' EXIT
 
 RAND_SIZE_BYTES=$(calc_safe_size_bytes_for_path "$TMPDIR" 4)
-SEQ_SIZE_BYTES=$(calc_safe_size_bytes_for_path "$TMPDIR" 1)
-
 log "Running native random read (${RUNTIME}s) with $(bytes_to_mib_string "$RAND_SIZE_BYTES") per fio job..."
 echo "=== Random Read (4K, Direct I/O, QD=32, 4 jobs) ===" >> "$OUT"
 run_fio_job "rand_read" "randread" "4k" 4 32 "$RAND_SIZE_BYTES" "$TMPDIR" >> "$OUT" 2>&1
 echo "" >> "$OUT"
+cleanup_fio_artifacts "$TMPDIR"
 
+RAND_SIZE_BYTES=$(calc_safe_size_bytes_for_path "$TMPDIR" 4)
 log "Running native random write (${RUNTIME}s) with $(bytes_to_mib_string "$RAND_SIZE_BYTES") per fio job..."
 echo "=== Random Write (4K, Direct I/O, QD=32, 4 jobs) ===" >> "$OUT"
 run_fio_job "rand_write" "randwrite" "4k" 4 32 "$RAND_SIZE_BYTES" "$TMPDIR" >> "$OUT" 2>&1
 echo "" >> "$OUT"
+cleanup_fio_artifacts "$TMPDIR"
 
+SEQ_SIZE_BYTES=$(calc_safe_size_bytes_for_path "$TMPDIR" 1)
 log "Running native sequential read (${RUNTIME}s) with $(bytes_to_mib_string "$SEQ_SIZE_BYTES")..."
 echo "=== Sequential Read (1M, Direct I/O) ===" >> "$OUT"
 run_fio_job "seq_read" "read" "1M" 1 8 "$SEQ_SIZE_BYTES" "$TMPDIR" >> "$OUT" 2>&1
 echo "" >> "$OUT"
+cleanup_fio_artifacts "$TMPDIR"
 
+SEQ_SIZE_BYTES=$(calc_safe_size_bytes_for_path "$TMPDIR" 1)
 log "Running native sequential write (${RUNTIME}s) with $(bytes_to_mib_string "$SEQ_SIZE_BYTES")..."
 echo "=== Sequential Write (1M, Direct I/O) ===" >> "$OUT"
 run_fio_job "seq_write" "write" "1M" 1 8 "$SEQ_SIZE_BYTES" "$TMPDIR" >> "$OUT" 2>&1
+cleanup_fio_artifacts "$TMPDIR"
 
 log "Native results saved to $OUT"
 
@@ -211,62 +256,15 @@ if [[ -z "$VM_IP" ]]; then
     log "WARNING: VM_IP not set. Skipping KVM storage benchmark."
     echo "# SKIPPED: VM_IP not available." >> "$OUT"
 else
+    check_vm_ssh_ready "$VM_IP"
     log "Running KVM random read (VM: $VM_IP)..."
     echo "=== Random Read ===" >> "$OUT"
-    ssh -o StrictHostKeyChecking=no "${VM_USER}@${VM_IP}" "
-        set -euo pipefail
-        avail_kb=\$(df -Pk /tmp | awk 'NR==2 {print \$4}')
-        avail_bytes=\$((avail_kb * 1024))
-        size_bytes=\$((avail_bytes * $FREE_SPACE_USAGE_PERCENT / 100 / 4))
-        if (( size_bytes > $DEFAULT_TEST_FILE_SIZE_BYTES )); then
-            size_bytes=$DEFAULT_TEST_FILE_SIZE_BYTES
-        fi
-        if (( size_bytes < $MIN_TEST_FILE_SIZE_BYTES )); then
-            size_bytes=$MIN_TEST_FILE_SIZE_BYTES
-        fi
-        fio \
-            --name=rand_read \
-            --rw=randread \
-            --bs=4k \
-            --direct=1 \
-            --numjobs=4 \
-            --iodepth=32 \
-            --size=\$((size_bytes / 1024 / 1024))M \
-            --runtime=$RUNTIME \
-            --time_based \
-            --group_reporting \
-            --output-format=normal \
-            --directory=/tmp
-    " >> "$OUT" 2>&1
+    run_fio_kvm "rand_read" "randread" >> "$OUT" 2>&1
     echo "" >> "$OUT"
 
     log "Running KVM random write..."
     echo "=== Random Write ===" >> "$OUT"
-    ssh -o StrictHostKeyChecking=no "${VM_USER}@${VM_IP}" "
-        set -euo pipefail
-        avail_kb=\$(df -Pk /tmp | awk 'NR==2 {print \$4}')
-        avail_bytes=\$((avail_kb * 1024))
-        size_bytes=\$((avail_bytes * $FREE_SPACE_USAGE_PERCENT / 100 / 4))
-        if (( size_bytes > $DEFAULT_TEST_FILE_SIZE_BYTES )); then
-            size_bytes=$DEFAULT_TEST_FILE_SIZE_BYTES
-        fi
-        if (( size_bytes < $MIN_TEST_FILE_SIZE_BYTES )); then
-            size_bytes=$MIN_TEST_FILE_SIZE_BYTES
-        fi
-        fio \
-            --name=rand_write \
-            --rw=randwrite \
-            --bs=4k \
-            --direct=1 \
-            --numjobs=4 \
-            --iodepth=32 \
-            --size=\$((size_bytes / 1024 / 1024))M \
-            --runtime=$RUNTIME \
-            --time_based \
-            --group_reporting \
-            --output-format=normal \
-            --directory=/tmp
-    " >> "$OUT" 2>&1
+    run_fio_kvm "rand_write" "randwrite" >> "$OUT" 2>&1
     log "KVM results saved to $OUT"
 fi
 

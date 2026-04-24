@@ -15,6 +15,9 @@
 set -euo pipefail
 
 RESULTS_DIR="$(cd "$(dirname "$0")/../../results" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/common.sh"
 THREADS=(1 2 4 8)
 DURATION=30
 VM_IP="${VM_IP:-$(cat /tmp/vm_ip.txt 2>/dev/null || echo '')}"
@@ -107,12 +110,11 @@ if [[ -z "$VM_IP" ]]; then
     log "WARNING: VM_IP not set. Skipping KVM CPU benchmark."
     echo "# SKIPPED: VM_IP not available. Set VM_IP env var or run 03_setup_kvm.sh first." >> "$OUT"
 else
+    check_vm_ssh_ready "$VM_IP"
     for t in "${THREADS[@]}"; do
         log "KVM — $t thread(s) (VM: $VM_IP)..."
         echo "--- Threads: $t ---" >> "$OUT"
-        ssh -o StrictHostKeyChecking=no \
-            -o ConnectTimeout=10 \
-            "${VM_USER}@${VM_IP}" \
+        run_vm_ssh "$VM_IP" \
             "sysbench cpu \
                 --cpu-max-prime=20000 \
                 --threads=$t \

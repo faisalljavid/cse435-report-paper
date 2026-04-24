@@ -1,5 +1,5 @@
 # CPU Benchmark — Native (Bare Metal)
-# Date: Fri 24 Apr 11:13:21 IST 2026
+# Date: Fri 24 Apr 14:11:40 IST 2026
 # Tool: sysbench cpu --cpu-max-prime=20000 --time=30s
 
 --- Threads: 1 ---
@@ -17,21 +17,21 @@ Initializing worker threads...
 Threads started!
 
 CPU speed:
-    events per second:  1922.10
+    events per second:  1928.49
 
 General statistics:
-    total time:                          30.0004s
-    total number of events:              57665
+    total time:                          30.0002s
+    total number of events:              57856
 
 Latency (ms):
          min:                                    0.51
          avg:                                    0.52
-         max:                                    6.38
+         max:                                    1.01
          95th percentile:                        0.53
-         sum:                                29994.93
+         sum:                                29994.95
 
 Threads fairness:
-    events (avg/stddev):           57665.0000/0.00
+    events (avg/stddev):           57856.0000/0.00
     execution time (avg/stddev):   29.9949/0.00
 
 
@@ -50,22 +50,22 @@ Initializing worker threads...
 Threads started!
 
 CPU speed:
-    events per second:  3568.08
+    events per second:  3764.93
 
 General statistics:
-    total time:                          30.0002s
-    total number of events:              107045
+    total time:                          30.0004s
+    total number of events:              112952
 
 Latency (ms):
          min:                                    0.51
-         avg:                                    0.56
-         max:                                    6.26
+         avg:                                    0.53
+         max:                                    0.69
          95th percentile:                        0.54
-         sum:                                59988.39
+         sum:                                59988.71
 
 Threads fairness:
-    events (avg/stddev):           53522.5000/4.50
-    execution time (avg/stddev):   29.9942/0.00
+    events (avg/stddev):           56476.0000/2.00
+    execution time (avg/stddev):   29.9944/0.00
 
 
 --- Threads: 4 ---
@@ -83,22 +83,22 @@ Initializing worker threads...
 Threads started!
 
 CPU speed:
-    events per second:  7385.54
+    events per second:  7359.78
 
 General statistics:
     total time:                          30.0005s
-    total number of events:              221574
+    total number of events:              220802
 
 Latency (ms):
          min:                                    0.53
          avg:                                    0.54
-         max:                                    0.69
+         max:                                    0.82
          95th percentile:                        0.55
-         sum:                               119978.18
+         sum:                               119978.46
 
 Threads fairness:
-    events (avg/stddev):           55393.5000/1.12
-    execution time (avg/stddev):   29.9945/0.00
+    events (avg/stddev):           55200.5000/8.96
+    execution time (avg/stddev):   29.9946/0.00
 
 
 --- Threads: 8 ---
@@ -116,21 +116,21 @@ Initializing worker threads...
 Threads started!
 
 CPU speed:
-    events per second: 14039.95
+    events per second: 14032.41
 
 General statistics:
     total time:                          30.0006s
-    total number of events:              421214
+    total number of events:              420988
 
 Latency (ms):
          min:                                    0.54
          avg:                                    0.57
-         max:                                    6.07
+         max:                                    1.23
          95th percentile:                        0.58
-         sum:                               239955.55
+         sum:                               239956.58
 
 Threads fairness:
-    events (avg/stddev):           52651.7500/14.23
-    execution time (avg/stddev):   29.9944/0.00
+    events (avg/stddev):           52623.5000/8.92
+    execution time (avg/stddev):   29.9946/0.00
 
 

@@ -1,5 +1,5 @@
 # Storage I/O Benchmark — Native (Bare Metal)
-# Date: Fri 24 Apr 11:15:23 IST 2026
+# Date: Fri 24 Apr 14:17:01 IST 2026
 # Tool: fio, 4K random RW (direct I/O, qd=32, 4 jobs), 1M sequential RW
 
 === Random Read (4K, Direct I/O, QD=32, 4 jobs) ===
@@ -7,36 +7,108 @@ rand_read: (g=0): rw=randread, bs=(R) 4096B-4096B, (W) 4096B-4096B, (T) 4096B-40
 ...
 fio-3.40
 Starting 4 processes
-rand_read: Laying out IO file (1 file / 4096MiB)
-rand_read: Laying out IO file (1 file / 4096MiB)
-fio: ENOSPC on laying out file, stopping
-rand_read: Laying out IO file (1 file / 4096MiB)
-fio: ENOSPC on laying out file, stopping
-rand_read: Laying out IO file (1 file / 4096MiB)
-fio: ENOSPC on laying out file, stopping
+rand_read: Laying out IO file (1 file / 1153MiB)
+rand_read: Laying out IO file (1 file / 1153MiB)
+rand_read: Laying out IO file (1 file / 1153MiB)
+rand_read: Laying out IO file (1 file / 1153MiB)
+note: both iodepth >= 1 and synchronous I/O engine are selected, queue depth will be capped at 1
+note: both iodepth >= 1 and synchronous I/O engine are selected, queue depth will be capped at 1
+note: both iodepth >= 1 and synchronous I/O engine are selected, queue depth will be capped at 1
 note: both iodepth >= 1 and synchronous I/O engine are selected, queue depth will be capped at 1
 
-rand_read: (groupid=0, jobs=4): err=28 (file:filesetup.c:240, func=write, error=No space left on device): pid=191376: Fri Apr 24 11:16:32 2026
-  read: IOPS=817k, BW=3191MiB/s (3346MB/s)(187GiB/60001msec)
-    clat (nsec): min=711, max=1110.4k, avg=1043.17, stdev=269.95
-     lat (nsec): min=721, max=1110.4k, avg=1059.19, stdev=271.07
+rand_read: (groupid=0, jobs=4): err= 0: pid=12717: Fri Apr 24 14:18:04 2026
+  read: IOPS=3007k, BW=11.5GiB/s (12.3GB/s)(688GiB/60002msec)
+    clat (nsec): min=721, max=4036.3k, avg=1139.45, stdev=657.63
+     lat (nsec): min=741, max=4036.3k, avg=1157.61, stdev=658.04
     clat percentiles (nsec):
-     |  1.00th=[  884],  5.00th=[  916], 10.00th=[  924], 20.00th=[  940],
-     | 30.00th=[  964], 40.00th=[  988], 50.00th=[ 1004], 60.00th=[ 1020],
-     | 70.00th=[ 1048], 80.00th=[ 1080], 90.00th=[ 1256], 95.00th=[ 1336],
-     | 99.00th=[ 1480], 99.50th=[ 1720], 99.90th=[ 4704], 99.95th=[ 5472],
-     | 99.99th=[ 6496]
-   bw (  MiB/s): min= 3036, max= 3230, per=100.00%, avg=3193.65, stdev=27.38, samples=119
-   iops        : min=777441, max=827078, avg=817574.90, stdev=7008.47, samples=119
-  lat (nsec)   : 750=0.01%, 1000=44.50%
-  lat (usec)   : 2=55.18%, 4=0.22%, 10=0.10%, 20=0.01%, 50=0.01%
+     |  1.00th=[  900],  5.00th=[  980], 10.00th=[ 1012], 20.00th=[ 1048],
+     | 30.00th=[ 1080], 40.00th=[ 1096], 50.00th=[ 1128], 60.00th=[ 1144],
+     | 70.00th=[ 1160], 80.00th=[ 1192], 90.00th=[ 1256], 95.00th=[ 1368],
+     | 99.00th=[ 1576], 99.50th=[ 1784], 99.90th=[ 4512], 99.95th=[ 5216],
+     | 99.99th=[ 5920]
+   bw (  MiB/s): min=11603, max=12120, per=100.00%, avg=11749.17, stdev=18.47, samples=476
+   iops        : min=2970580, max=3102744, avg=3007787.78, stdev=4727.64, samples=476
+  lat (nsec)   : 750=0.01%, 1000=6.87%
+  lat (usec)   : 2=92.74%, 4=0.27%, 10=0.11%, 20=0.01%, 50=0.01%
   lat (usec)   : 100=0.01%, 250=0.01%
-  lat (msec)   : 2=0.01%
-  cpu          : usr=36.73%, sys=62.87%, ctx=570, majf=0, minf=11
+  lat (msec)   : 4=0.01%, 10=0.01%
+  cpu          : usr=36.29%, sys=63.36%, ctx=759, majf=0, minf=41
   IO depths    : 1=100.0%, 2=0.0%, 4=0.0%, 8=0.0%, 16=0.0%, 32=0.0%, >=64=0.0%
      submit    : 0=0.0%, 4=100.0%, 8=0.0%, 16=0.0%, 32=0.0%, 64=0.0%, >=64=0.0%
      complete  : 0=0.0%, 4=100.0%, 8=0.0%, 16=0.0%, 32=0.0%, 64=0.0%, >=64=0.0%
-     issued rwts: total=49021364,0,0,0 short=0,0,0,0 dropped=0,0,0,0
+     issued rwts: total=180419879,0,0,0 short=0,0,0,0 dropped=0,0,0,0
+     latency   : target=0, window=0, percentile=100.00%, depth=32
 
 Run status group 0 (all jobs):
-   READ: bw=3191MiB/s (3346MB/s), 3191MiB/s-3191MiB/s (3346MB/s-3346MB/s), io=187GiB (201GB), run=60001-60001msec
+   READ: bw=11.5GiB/s (12.3GB/s), 11.5GiB/s-11.5GiB/s (12.3GB/s-12.3GB/s), io=688GiB (739GB), run=60002-60002msec
+
+=== Random Write (4K, Direct I/O, QD=32, 4 jobs) ===
+rand_write: (g=0): rw=randwrite, bs=(R) 4096B-4096B, (W) 4096B-4096B, (T) 4096B-4096B, ioengine=psync, iodepth=32
+...
+fio-3.40
+Starting 4 processes
+rand_write: Laying out IO file (1 file / 1153MiB)
+rand_write: Laying out IO file (1 file / 1153MiB)
+rand_write: Laying out IO file (1 file / 1153MiB)
+rand_write: Laying out IO file (1 file / 1153MiB)
+note: both iodepth >= 1 and synchronous I/O engine are selected, queue depth will be capped at 1
+note: both iodepth >= 1 and synchronous I/O engine are selected, queue depth will be capped at 1
+note: both iodepth >= 1 and synchronous I/O engine are selected, queue depth will be capped at 1
+note: both iodepth >= 1 and synchronous I/O engine are selected, queue depth will be capped at 1
+
+rand_write: (groupid=0, jobs=4): err= 0: pid=12890: Fri Apr 24 14:19:07 2026
+  write: IOPS=2053k, BW=8021MiB/s (8411MB/s)(470GiB/60002msec); 0 zone resets
+    clat (nsec): min=882, max=178793, avg=1719.62, stdev=319.20
+     lat (nsec): min=922, max=178843, avg=1759.56, stdev=321.96
+    clat percentiles (nsec):
+     |  1.00th=[ 1336],  5.00th=[ 1432], 10.00th=[ 1480], 20.00th=[ 1544],
+     | 30.00th=[ 1592], 40.00th=[ 1640], 50.00th=[ 1688], 60.00th=[ 1720],
+     | 70.00th=[ 1784], 80.00th=[ 1848], 90.00th=[ 1976], 95.00th=[ 2096],
+     | 99.00th=[ 2416], 99.50th=[ 2768], 99.90th=[ 6304], 99.95th=[ 7136],
+     | 99.99th=[ 9024]
+   bw (  MiB/s): min= 7551, max= 8122, per=100.00%, avg=8022.92, stdev=19.84, samples=476
+   iops        : min=1933112, max=2079476, avg=2053867.53, stdev=5078.94, samples=476
+  lat (nsec)   : 1000=0.01%
+  lat (usec)   : 2=91.37%, 4=8.43%, 10=0.19%, 20=0.01%, 50=0.01%
+  lat (usec)   : 100=0.01%, 250=0.01%
+  cpu          : usr=27.36%, sys=72.21%, ctx=770, majf=0, minf=38
+  IO depths    : 1=100.0%, 2=0.0%, 4=0.0%, 8=0.0%, 16=0.0%, 32=0.0%, >=64=0.0%
+     submit    : 0=0.0%, 4=100.0%, 8=0.0%, 16=0.0%, 32=0.0%, 64=0.0%, >=64=0.0%
+     complete  : 0=0.0%, 4=100.0%, 8=0.0%, 16=0.0%, 32=0.0%, 64=0.0%, >=64=0.0%
+     issued rwts: total=0,123206983,0,0 short=0,0,0,0 dropped=0,0,0,0
+     latency   : target=0, window=0, percentile=100.00%, depth=32
+
+Run status group 0 (all jobs):
+  WRITE: bw=8021MiB/s (8411MB/s), 8021MiB/s-8021MiB/s (8411MB/s-8411MB/s), io=470GiB (505GB), run=60002-60002msec
+
+=== Sequential Read (1M, Direct I/O) ===
+seq_read: (g=0): rw=read, bs=(R) 1024KiB-1024KiB, (W) 1024KiB-1024KiB, (T) 1024KiB-1024KiB, ioengine=psync, iodepth=8
+fio-3.40
+Starting 1 process
+seq_read: Laying out IO file (1 file / 4096MiB)
+note: both iodepth >= 1 and synchronous I/O engine are selected, queue depth will be capped at 1
+
+fio: terminating on signal 2
+
+seq_read: (groupid=0, jobs=1): err= 0: pid=13062: Fri Apr 24 14:19:12 2026
+  read: IOPS=13.6k, BW=13.3GiB/s (14.3GB/s)(35.5GiB/2673msec)
+    clat (usec): min=68, max=884, avg=73.14, stdev= 7.42
+     lat (usec): min=68, max=885, avg=73.17, stdev= 7.42
+    clat percentiles (usec):
+     |  1.00th=[   70],  5.00th=[   71], 10.00th=[   71], 20.00th=[   71],
+     | 30.00th=[   72], 40.00th=[   72], 50.00th=[   72], 60.00th=[   72],
+     | 70.00th=[   73], 80.00th=[   74], 90.00th=[   79], 95.00th=[   85],
+     | 99.00th=[  103], 99.50th=[  106], 99.90th=[  124], 99.95th=[  135],
+     | 99.99th=[  208]
+   bw (  MiB/s): min=13322, max=13882, per=99.98%, avg=13614.40, stdev=239.88, samples=5
+   iops        : min=13322, max=13882, avg=13614.40, stdev=239.88, samples=5
+  lat (usec)   : 100=98.70%, 250=1.30%, 1000=0.01%
+  cpu          : usr=0.75%, sys=98.84%, ctx=8, majf=0, minf=265
+  IO depths    : 1=100.0%, 2=0.0%, 4=0.0%, 8=0.0%, 16=0.0%, 32=0.0%, >=64=0.0%
+     submit    : 0=0.0%, 4=100.0%, 8=0.0%, 16=0.0%, 32=0.0%, 64=0.0%, >=64=0.0%
+     complete  : 0=0.0%, 4=100.0%, 8=0.0%, 16=0.0%, 32=0.0%, 64=0.0%, >=64=0.0%
+     issued rwts: total=36400,0,0,0 short=0,0,0,0 dropped=0,0,0,0
+     latency   : target=0, window=0, percentile=100.00%, depth=8
+
+Run status group 0 (all jobs):
+   READ: bw=13.3GiB/s (14.3GB/s), 13.3GiB/s-13.3GiB/s (14.3GB/s-14.3GB/s), io=35.5GiB (38.2GB), run=2673-2673msec

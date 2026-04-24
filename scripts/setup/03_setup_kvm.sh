@@ -40,6 +40,38 @@ CLOUD_IMAGE_URL="https://cloud-images.ubuntu.com/jammy/current/jammy-server-clou
 CLOUD_IMAGE="$IMAGE_DIR/ubuntu-22.04-cloud.img"
 VM_DISK="$IMAGE_DIR/${VM_NAME}.qcow2"
 SEED_ISO="$IMAGE_DIR/${VM_NAME}-seed.iso"
+VM_BENCH_USER="bench"
+VM_BENCH_PASSWORD="${BENCH_VM_PASSWORD:-benchpass}"
+
+if [[ -r "/home/${SUDO_USER:-$USER}/.ssh/id_ed25519.pub" ]]; then
+    VM_SSH_PUBLIC_KEY="$(<"/home/${SUDO_USER:-$USER}/.ssh/id_ed25519.pub")"
+elif [[ -r "/home/${SUDO_USER:-$USER}/.ssh/id_rsa.pub" ]]; then
+    VM_SSH_PUBLIC_KEY="$(<"/home/${SUDO_USER:-$USER}/.ssh/id_rsa.pub")"
+else
+    VM_SSH_PUBLIC_KEY=""
+fi
+
+vm_ssh_ready() {
+    local vm_ip=$1
+
+    if command -v sshpass >/dev/null 2>&1; then
+        sshpass -p "$VM_BENCH_PASSWORD" ssh \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -o ConnectTimeout=10 \
+            "${VM_BENCH_USER}@${vm_ip}" \
+            "test -f /tmp/setup_done && command -v sysbench >/dev/null && command -v fio >/dev/null && command -v redis-benchmark >/dev/null" \
+            >/dev/null 2>&1
+    else
+        ssh \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -o ConnectTimeout=10 \
+            "${VM_BENCH_USER}@${vm_ip}" \
+            "test -f /tmp/setup_done && command -v sysbench >/dev/null && command -v fio >/dev/null && command -v redis-benchmark >/dev/null" \
+            >/dev/null 2>&1
+    fi
+}
 
 # --------------------------------------------------------------------------- #
 # 1. Check KVM availability
@@ -82,16 +114,22 @@ log "VM disk created at $VM_DISK"
 log "Creating cloud-init seed ISO..."
 
 # user-data: installs all benchmark tools automatically
-cat > /tmp/user-data <<'USERDATA'
+cat > /tmp/user-data <<USERDATA
 #cloud-config
 hostname: bench-vm
+ssh_pwauth: true
 users:
-  - name: bench
+  - name: ${VM_BENCH_USER}
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
-    passwd: "$6$benchsalt$kj8XhKmfGv8wJqM4pJYhR0t3qWvZfN9a/LFrXbPlKoUmVdHeSyAzOE1CuQnWtRpBgI7lXJMaBcDEFgHiJkLm."
     lock_passwd: false
-    ssh_authorized_keys: []
+    plain_text_passwd: ${VM_BENCH_PASSWORD}
+$(if [[ -n "$VM_SSH_PUBLIC_KEY" ]]; then printf '    ssh_authorized_keys:\n      - %s\n' "$VM_SSH_PUBLIC_KEY"; else printf '    ssh_authorized_keys: []\n'; fi)
+
+chpasswd:
+  expire: false
+  list:
+    - ${VM_BENCH_USER}:${VM_BENCH_PASSWORD}
 
 package_update: true
 package_upgrade: false
@@ -124,7 +162,7 @@ runcmd:
   - systemctl restart redis-server
   - echo "cloud-init benchmark setup complete" > /tmp/setup_done
 
-final_message: "Benchmark VM is ready after $UPTIME seconds."
+final_message: "Benchmark VM is ready after \$UPTIME seconds."
 USERDATA
 
 cat > /tmp/meta-data <<METADATA
@@ -189,6 +227,23 @@ else
     log "VM IP address: $VM_IP"
     echo "$VM_IP" > /tmp/vm_ip.txt
     log "IP saved to /tmp/vm_ip.txt for use by benchmark scripts."
+
+    log "Waiting for cloud-init and benchmark packages inside the VM..."
+    VM_READY=0
+    for i in $(seq 1 60); do
+        if vm_ssh_ready "$VM_IP"; then
+            VM_READY=1
+            break
+        fi
+        sleep 10
+    done
+
+    if [[ "$VM_READY" -eq 1 ]]; then
+        log "VM provisioning completed successfully."
+    else
+        warn "VM is reachable, but cloud-init/setup may still be running."
+        warn "Wait a bit longer or check with: ssh ${VM_BENCH_USER}@${VM_IP} 'cat /tmp/setup_done'"
+    fi
 fi
 
 log ""
@@ -199,7 +254,9 @@ log "RAM      : ${VM_RAM_MB} MB"
 log "Disk     : $VM_DISK (${VM_DISK_GB}G qcow2)"
 log "Network  : virtio (NAT)"
 log ""
-log "Allow ~3 minutes for cloud-init to finish installing packages inside the VM."
+log "VM setup waits for cloud-init, package installation, and /tmp/setup_done before reporting ready."
+log "VM login user : ${VM_BENCH_USER}"
+log "VM login pass : ${VM_BENCH_PASSWORD}"
 log "You can monitor progress with: sudo virsh console $VM_NAME"
 log ""
 log "Next step: sudo bash scripts/benchmarks/run_all.sh"

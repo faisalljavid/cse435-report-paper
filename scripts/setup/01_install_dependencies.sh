@@ -60,6 +60,7 @@ case "$DISTRO_FAMILY" in
             genisoimage
             cloud-image-utils
             openssh-client
+            sshpass
         )
         ;;
     fedora|rhel)
@@ -78,6 +79,7 @@ case "$DISTRO_FAMILY" in
             genisoimage
             cloud-utils
             openssh-clients
+            sshpass
         )
         ;;
     arch)
@@ -95,6 +97,7 @@ case "$DISTRO_FAMILY" in
             cdrkit
             cloud-image-utils
             openssh
+            sshpass
         )
         ;;
     suse)
@@ -113,6 +116,7 @@ case "$DISTRO_FAMILY" in
             genisoimage
             cloud-utils
             openssh-clients
+            sshpass
         )
         ;;
 esac

@@ -19,6 +19,9 @@
 set -euo pipefail
 
 RESULTS_DIR="$(cd "$(dirname "$0")/../../results" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/common.sh"
 VM_IP="${VM_IP:-$(cat /tmp/vm_ip.txt 2>/dev/null || echo '')}"
 VM_USER="bench"
 
@@ -55,9 +58,11 @@ mysql_exec_tcp() {
 prepare_sysbench() {
     local host=$1
     local port=$2
+    cleanup_sysbench "$host" "$port"
     log "Preparing SysBench OLTP tables (${TABLES} tables × ${TABLE_SIZE} rows)..."
     sysbench oltp_read_write \
         --db-driver=mysql \
+        --db-ps-mode=disable \
         --mysql-host="$host" \
         --mysql-port="$port" \
         --mysql-user="$MYSQL_USER" \
@@ -75,6 +80,7 @@ run_oltp() {
     local threads=$3
     sysbench oltp_read_write \
         --db-driver=mysql \
+        --db-ps-mode=disable \
         --mysql-host="$host" \
         --mysql-port="$port" \
         --mysql-user="$MYSQL_USER" \
@@ -93,6 +99,7 @@ cleanup_sysbench() {
     local port=$2
     sysbench oltp_read_write \
         --db-driver=mysql \
+        --db-ps-mode=disable \
         --mysql-host="$host" \
         --mysql-port="$port" \
         --mysql-user="$MYSQL_USER" \
@@ -205,6 +212,7 @@ mysql -u root -e "
     GRANT ALL ON ${MYSQL_DB}.* TO '${MYSQL_USER}'@'%';
     FLUSH PRIVILEGES;
     SET GLOBAL max_connections = 512;
+    SET GLOBAL max_prepared_stmt_count = 65535;
 " >/dev/null 2>&1 || true
 
 wait_for_mysql_tcp "$MYSQL_HOST_NATIVE" "$MYSQL_PORT_NATIVE" "$MYSQL_USER" "$MYSQL_PASS"
@@ -331,10 +339,11 @@ if [[ -z "$VM_IP" ]]; then
     log "WARNING: VM_IP not set. Skipping KVM MySQL benchmark."
     echo "# SKIPPED: VM_IP not available." >> "$OUT"
 else
-    ssh -o StrictHostKeyChecking=no "${VM_USER}@${VM_IP}" \
-        "sudo mysql -e \"SET GLOBAL max_connections = 512;\" >/dev/null 2>&1 || true"
+    check_vm_ssh_ready "$VM_IP"
+    run_vm_ssh "$VM_IP" \
+        "sudo mysql -e \"SET GLOBAL max_connections = 512; SET GLOBAL max_prepared_stmt_count = 65535;\" >/dev/null 2>&1 || true"
 
-    KVM_MAX_CONNECTIONS="$(ssh -o StrictHostKeyChecking=no "${VM_USER}@${VM_IP}" \
+    KVM_MAX_CONNECTIONS="$(run_vm_ssh "$VM_IP" \
         "mysql --protocol=TCP -h 127.0.0.1 -u ${MYSQL_USER} -p${MYSQL_PASS} -Nse \"SHOW VARIABLES LIKE 'max_connections';\" 2>/dev/null | awk 'NR==1 {print \$2}'" || true)"
     if [[ -z "$KVM_MAX_CONNECTIONS" ]]; then
         KVM_MAX_CONNECTIONS=151
@@ -343,9 +352,20 @@ else
     log_thread_plan "KVM" "$KVM_MAX_CONNECTIONS" "${KVM_THREAD_COUNTS[@]}"
 
     log "Preparing SysBench tables inside KVM guest..."
-    ssh -o StrictHostKeyChecking=no "${VM_USER}@${VM_IP}" \
+    run_vm_ssh "$VM_IP" \
         "sysbench oltp_read_write \
             --db-driver=mysql \
+            --db-ps-mode=disable \
+            --mysql-host=127.0.0.1 \
+            --mysql-user=${MYSQL_USER} \
+            --mysql-password=${MYSQL_PASS} \
+            --mysql-db=${MYSQL_DB} \
+            --tables=${TABLES} \
+            cleanup" >/dev/null 2>&1 || true
+    run_vm_ssh "$VM_IP" \
+        "sysbench oltp_read_write \
+            --db-driver=mysql \
+            --db-ps-mode=disable \
             --mysql-host=127.0.0.1 \
             --mysql-user=${MYSQL_USER} \
             --mysql-password=${MYSQL_PASS} \
@@ -358,9 +378,10 @@ else
     for t in "${KVM_THREAD_COUNTS[@]}"; do
         log "KVM MySQL — $t thread(s) (VM: $VM_IP)..."
         echo "--- Threads: $t ---" >> "$OUT"
-        ssh -o StrictHostKeyChecking=no "${VM_USER}@${VM_IP}" \
+        run_vm_ssh "$VM_IP" \
             "sysbench oltp_read_write \
                 --db-driver=mysql \
+                --db-ps-mode=disable \
                 --mysql-host=127.0.0.1 \
                 --mysql-user=${MYSQL_USER} \
                 --mysql-password=${MYSQL_PASS} \
@@ -374,9 +395,10 @@ else
         echo "" >> "$OUT"
     done
 
-    ssh -o StrictHostKeyChecking=no "${VM_USER}@${VM_IP}" \
+    run_vm_ssh "$VM_IP" \
         "sysbench oltp_read_write \
             --db-driver=mysql \
+            --db-ps-mode=disable \
             --mysql-host=127.0.0.1 \
             --mysql-user=${MYSQL_USER} \
             --mysql-password=${MYSQL_PASS} \

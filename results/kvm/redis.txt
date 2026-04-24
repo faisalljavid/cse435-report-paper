@@ -1,0 +1,4 @@
+# Redis Benchmark — KVM (QEMU-KVM, Ubuntu 22.04 guest)
+# Date: Fri 24 Apr 14:03:34 IST 2026
+
+bench@192.168.122.140: Permission denied (publickey).
