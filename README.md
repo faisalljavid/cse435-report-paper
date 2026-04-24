@@ -66,7 +66,7 @@ The original study benchmarked Docker containers against KVM virtual machines on
 
 ### Prerequisites
 
-- A Linux host (Ubuntu 22.04+ or equivalent recommended)
+- A supported Linux host. The setup scripts now detect the distro automatically and install packages with the native package manager on Debian/Ubuntu, Fedora/RHEL-family, Arch-family, and openSUSE/SUSE systems.
 - `sudo` / root access
 - Internet connection (for package installation)
 - KVM-capable CPU (check with: `egrep -c '(vmx|svm)' /proc/cpuinfo` — must be > 0)
@@ -78,11 +78,15 @@ chmod +x scripts/setup/*.sh scripts/benchmarks/*.sh
 sudo scripts/setup/01_install_dependencies.sh
 ```
 
+This script detects the host distro first, refreshes the appropriate package indexes, and installs the required benchmark, Docker, and KVM tooling using the system package manager.
+
 ### Step 2 — Set Up Docker Environment
 
 ```bash
 sudo scripts/setup/02_setup_docker.sh
 ```
+
+If Docker is not already installed, the script installs it using the distro's package manager and then prepares the benchmark containers, volume, and network.
 
 ### Step 3 — Set Up KVM Virtual Machine
 
