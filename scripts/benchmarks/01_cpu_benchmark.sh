@@ -16,9 +16,10 @@ set -euo pipefail
 
 RESULTS_DIR="$(cd "$(dirname "$0")/../../results" && pwd)"
 THREADS=(1 2 4 8)
-DURATION=30  # seconds per run
+DURATION=30
 VM_IP="${VM_IP:-$(cat /tmp/vm_ip.txt 2>/dev/null || echo '')}"
 VM_USER="bench"
+HOST_CPU_COUNT="$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 1)"
 
 GREEN='\033[0;32m'; CYAN='\033[0;36m'; NC='\033[0m'
 log()     { echo -e "${GREEN}[CPU]${NC} $*"; }
@@ -33,11 +34,35 @@ run_sysbench_cpu() {
         run
 }
 
+run_sysbench_cpu_docker() {
+    local threads=$1
+    local cpus_assigned=$threads
+
+    if (( cpus_assigned > HOST_CPU_COUNT )); then
+        cpus_assigned=$HOST_CPU_COUNT
+    fi
+
+    docker run --rm \
+        --network host \
+        --cpuset-cpus="0-$((cpus_assigned - 1))" \
+        ubuntu:22.04 \
+        bash -lc "set -euo pipefail
+                  export DEBIAN_FRONTEND=noninteractive
+                  apt-get update -qq >/dev/null
+                  apt-get install -qq -y --no-install-recommends sysbench >/dev/null
+                  sysbench cpu \
+                      --cpu-max-prime=20000 \
+                      --threads=$threads \
+                      --time=$DURATION \
+                      run"
+}
+
+mkdir -p "$RESULTS_DIR/native" "$RESULTS_DIR/docker" "$RESULTS_DIR/kvm"
+
 # --------------------------------------------------------------------------- #
 # 1. NATIVE
 # --------------------------------------------------------------------------- #
 section "Native CPU Benchmark"
-mkdir -p "$RESULTS_DIR/native"
 OUT="$RESULTS_DIR/native/cpu.txt"
 echo "# CPU Benchmark — Native (Bare Metal)" > "$OUT"
 echo "# Date: $(date)" >> "$OUT"
@@ -47,7 +72,7 @@ echo "" >> "$OUT"
 for t in "${THREADS[@]}"; do
     log "Native — $t thread(s)..."
     echo "--- Threads: $t ---" >> "$OUT"
-    run_sysbench_cpu "$t" 2>&1 >> "$OUT"
+    run_sysbench_cpu "$t" >> "$OUT" 2>&1
     echo "" >> "$OUT"
 done
 log "Native results saved to $OUT"
@@ -57,7 +82,6 @@ log "Native results saved to $OUT"
 # --------------------------------------------------------------------------- #
 section "Docker CPU Benchmark"
 OUT="$RESULTS_DIR/docker/cpu.txt"
-mkdir -p "$RESULTS_DIR/docker"
 echo "# CPU Benchmark — Docker (ubuntu:22.04, host networking)" > "$OUT"
 echo "# Date: $(date)" >> "$OUT"
 echo "" >> "$OUT"
@@ -65,16 +89,7 @@ echo "" >> "$OUT"
 for t in "${THREADS[@]}"; do
     log "Docker — $t thread(s)..."
     echo "--- Threads: $t ---" >> "$OUT"
-    docker run --rm \
-        --network host \
-        --cpuset-cpus="0-$((t-1))" \
-        ubuntu:22.04 \
-        bash -c "apt-get install -qq -y sysbench > /dev/null 2>&1 && \
-                 sysbench cpu \
-                     --cpu-max-prime=20000 \
-                     --threads=$t \
-                     --time=$DURATION \
-                     run" 2>&1 >> "$OUT"
+    run_sysbench_cpu_docker "$t" >> "$OUT" 2>&1
     echo "" >> "$OUT"
 done
 log "Docker results saved to $OUT"
@@ -84,7 +99,6 @@ log "Docker results saved to $OUT"
 # --------------------------------------------------------------------------- #
 section "KVM CPU Benchmark"
 OUT="$RESULTS_DIR/kvm/cpu.txt"
-mkdir -p "$RESULTS_DIR/kvm"
 echo "# CPU Benchmark — KVM (QEMU-KVM, Ubuntu 22.04 guest)" > "$OUT"
 echo "# Date: $(date)" >> "$OUT"
 echo "" >> "$OUT"
@@ -103,7 +117,7 @@ else
                 --cpu-max-prime=20000 \
                 --threads=$t \
                 --time=$DURATION \
-                run" 2>&1 >> "$OUT"
+                run" >> "$OUT" 2>&1
         echo "" >> "$OUT"
     done
     log "KVM results saved to $OUT"

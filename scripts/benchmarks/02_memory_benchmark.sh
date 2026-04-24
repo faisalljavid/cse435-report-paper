@@ -20,9 +20,8 @@ GREEN='\033[0;32m'; CYAN='\033[0;36m'; NC='\033[0m'
 log()     { echo -e "${GREEN}[MEM]${NC} $*"; }
 section() { echo -e "\n${CYAN}━━━ $* ━━━${NC}"; }
 
-# Fall back to sysbench memory if STREAM binary is unavailable
-run_memory() {
-    if command -v "$STREAM_BIN" &>/dev/null; then
+run_memory_native() {
+    if [[ -x "$STREAM_BIN" ]]; then
         "$STREAM_BIN"
     else
         log "STREAM binary not found, using sysbench memory as fallback..."
@@ -35,6 +34,33 @@ run_memory() {
     fi
 }
 
+run_memory_sysbench() {
+    sysbench memory \
+        --memory-block-size=1M \
+        --memory-total-size=100G \
+        --memory-operation=write \
+        --threads=4 \
+        run
+}
+
+run_memory_docker() {
+    docker run --rm \
+        --network host \
+        ubuntu:22.04 \
+        bash -lc "set -euo pipefail
+                  export DEBIAN_FRONTEND=noninteractive
+                  apt-get update -qq >/dev/null
+                  apt-get install -qq -y --no-install-recommends sysbench >/dev/null
+                  sysbench memory \
+                      --memory-block-size=1M \
+                      --memory-total-size=100G \
+                      --memory-operation=write \
+                      --threads=4 \
+                      run"
+}
+
+mkdir -p "$RESULTS_DIR/native" "$RESULTS_DIR/docker" "$RESULTS_DIR/kvm"
+
 # --------------------------------------------------------------------------- #
 # 1. NATIVE
 # --------------------------------------------------------------------------- #
@@ -46,7 +72,7 @@ echo "# Tool: STREAM (array size 10M doubles) or sysbench memory fallback" >> "$
 echo "" >> "$OUT"
 
 log "Running native memory benchmark..."
-run_memory 2>&1 >> "$OUT"
+run_memory_native >> "$OUT" 2>&1
 log "Native results saved to $OUT"
 
 # --------------------------------------------------------------------------- #
@@ -56,28 +82,11 @@ section "Docker Memory Benchmark"
 OUT="$RESULTS_DIR/docker/memory.txt"
 echo "# Memory Bandwidth Benchmark — Docker (ubuntu:22.04)" > "$OUT"
 echo "# Date: $(date)" >> "$OUT"
+echo "# Tool: sysbench memory (portable container path)" >> "$OUT"
 echo "" >> "$OUT"
 
 log "Running Docker memory benchmark..."
-if command -v "$STREAM_BIN" &>/dev/null; then
-    # Copy the pre-built STREAM binary into a transient container and run it
-    docker run --rm \
-        --network host \
-        --volume "$STREAM_BIN:/usr/local/bin/stream_benchmark:ro" \
-        ubuntu:22.04 \
-        /usr/local/bin/stream_benchmark 2>&1 >> "$OUT"
-else
-    docker run --rm \
-        --network host \
-        ubuntu:22.04 \
-        bash -c "apt-get install -qq -y sysbench > /dev/null 2>&1 && \
-                 sysbench memory \
-                     --memory-block-size=1M \
-                     --memory-total-size=100G \
-                     --memory-operation=write \
-                     --threads=4 \
-                     run" 2>&1 >> "$OUT"
-fi
+run_memory_docker >> "$OUT" 2>&1
 log "Docker results saved to $OUT"
 
 # --------------------------------------------------------------------------- #
@@ -96,12 +105,7 @@ else
     log "Running KVM memory benchmark (VM: $VM_IP)..."
     ssh -o StrictHostKeyChecking=no \
         "${VM_USER}@${VM_IP}" \
-        "sysbench memory \
-            --memory-block-size=1M \
-            --memory-total-size=100G \
-            --memory-operation=write \
-            --threads=4 \
-            run" 2>&1 >> "$OUT"
+        "$(declare -f run_memory_sysbench); run_memory_sysbench" >> "$OUT" 2>&1
     log "KVM results saved to $OUT"
 fi
 

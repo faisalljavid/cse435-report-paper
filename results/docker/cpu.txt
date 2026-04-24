@@ -1,0 +1,4 @@
+# CPU Benchmark — Docker (ubuntu:22.04, host networking)
+# Date: Fri 24 Apr 11:15:21 IST 2026
+
+--- Threads: 1 ---

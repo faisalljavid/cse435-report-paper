@@ -1,0 +1,91 @@
+
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;36m  Container vs. VM Benchmark Suite[0m
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;32m[RUN][0m Start time: Fri 24 Apr 11:13:21 IST 2026
+[0;32m[RUN][0m Results directory: /home/faisalljavid/Downloads/firefox/containers_vs_vms_repo/repo/results
+[0;32m[RUN][0m Log file: /home/faisalljavid/Downloads/firefox/containers_vs_vms_repo/repo/results/run_all.log
+
+[0;32m[RUN][0m VM_IP detected: 192.168.122.224
+
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;36m  1/5 — CPU (Sysbench Prime)[0m
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+
+[0;36m━━━ Native CPU Benchmark ━━━[0m
+[0;32m[CPU][0m Native — 1 thread(s)...
+[0;32m[CPU][0m Native — 2 thread(s)...
+[0;32m[CPU][0m Native — 4 thread(s)...
+[0;32m[CPU][0m Native — 8 thread(s)...
+[0;32m[CPU][0m Native results saved to /home/faisalljavid/Downloads/firefox/containers_vs_vms_repo/repo/results/native/cpu.txt
+
+[0;36m━━━ Docker CPU Benchmark ━━━[0m
+[0;32m[CPU][0m Docker — 1 thread(s)...
+[0;32m[RUN][0m ✗ 1/5 — CPU (Sysbench Prime) failed — check /home/faisalljavid/Downloads/firefox/containers_vs_vms_repo/repo/results/run_all.log for details
+
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;36m  2/5 — Memory (STREAM / Sysbench)[0m
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+
+[0;36m━━━ Native Memory Benchmark ━━━[0m
+[0;32m[MEM][0m Running native memory benchmark...
+[0;32m[MEM][0m Native results saved to /home/faisalljavid/Downloads/firefox/containers_vs_vms_repo/repo/results/native/memory.txt
+
+[0;36m━━━ Docker Memory Benchmark ━━━[0m
+[0;32m[MEM][0m Running Docker memory benchmark...
+/usr/local/bin/stream_benchmark: error while loading shared libraries: libgomp.so.1: cannot open shared object file: No such file or directory
+[0;32m[RUN][0m ✗ 2/5 — Memory (STREAM / Sysbench) failed — check /home/faisalljavid/Downloads/firefox/containers_vs_vms_repo/repo/results/run_all.log for details
+
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;36m  3/5 — Storage I/O (fio)[0m
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+
+[0;36m━━━ Native Storage I/O Benchmark ━━━[0m
+[0;32m[I/O][0m Running native random read (60s)...
+fio: pid=0, err=28/file:filesetup.c:240, func=write, error=No space left on device
+fio: pid=0, err=28/file:filesetup.c:240, func=write, error=No space left on device
+fio: pid=0, err=28/file:filesetup.c:240, func=write, error=No space left on device
+[0;32m[RUN][0m ✗ 3/5 — Storage I/O (fio) failed — check /home/faisalljavid/Downloads/firefox/containers_vs_vms_repo/repo/results/run_all.log for details
+
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;36m  4/5 — Redis Latency[0m
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+
+[0;36m━━━ Native Redis Benchmark ━━━[0m
+[0;32m[REDIS][0m Starting native Redis server...
+[0;32m[REDIS][0m Running native Redis benchmark...
+[0;32m[RUN][0m ✗ 4/5 — Redis Latency failed — check /home/faisalljavid/Downloads/firefox/containers_vs_vms_repo/repo/results/run_all.log for details
+
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;36m  5/5 — MySQL OLTP (SysBench)[0m
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+
+[0;36m━━━ Native MySQL OLTP Benchmark ━━━[0m
+Creating a secondary index on 'sbtest5'...
+Creating a secondary index on 'sbtest6'...
+Creating a secondary index on 'sbtest4'...
+Creating a secondary index on 'sbtest3'...
+Creating a secondary index on 'sbtest1'...
+[0;32m[MySQL][0m Native MySQL — 1 thread(s)...
+[0;32m[MySQL][0m Native MySQL — 2 thread(s)...
+[0;32m[MySQL][0m Native MySQL — 4 thread(s)...
+[0;32m[MySQL][0m Native MySQL — 8 thread(s)...
+[0;32m[MySQL][0m Native MySQL — 16 thread(s)...
+[0;32m[MySQL][0m Native MySQL — 32 thread(s)...
+[0;32m[MySQL][0m Native MySQL — 64 thread(s)...
+[0;32m[MySQL][0m Native MySQL — 128 thread(s)...
+[0;32m[MySQL][0m Native MySQL — 256 thread(s)...
+[0;32m[RUN][0m ✗ 5/5 — MySQL OLTP (SysBench) failed — check /home/faisalljavid/Downloads/firefox/containers_vs_vms_repo/repo/results/run_all.log for details
+
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;36m  All Benchmarks Complete[0m
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;32m[RUN][0m Total time: 14m 33s
+[0;32m[RUN][0m 
+[0;32m[RUN][0m Results saved in:
+[0;32m[RUN][0m   results/native/     — bare metal baseline
+[0;32m[RUN][0m   results/docker/     — Docker container runs
+[0;32m[RUN][0m   results/kvm/        — KVM virtual machine runs
+[0;32m[RUN][0m 
+[0;32m[RUN][0m To generate charts, run:
+[0;32m[RUN][0m   python3 scripts/benchmarks/plot_results.py

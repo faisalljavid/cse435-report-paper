@@ -1,0 +1,42 @@
+# Storage I/O Benchmark — Native (Bare Metal)
+# Date: Fri 24 Apr 11:15:23 IST 2026
+# Tool: fio, 4K random RW (direct I/O, qd=32, 4 jobs), 1M sequential RW
+
+=== Random Read (4K, Direct I/O, QD=32, 4 jobs) ===
+rand_read: (g=0): rw=randread, bs=(R) 4096B-4096B, (W) 4096B-4096B, (T) 4096B-4096B, ioengine=psync, iodepth=32
+...
+fio-3.40
+Starting 4 processes
+rand_read: Laying out IO file (1 file / 4096MiB)
+rand_read: Laying out IO file (1 file / 4096MiB)
+fio: ENOSPC on laying out file, stopping
+rand_read: Laying out IO file (1 file / 4096MiB)
+fio: ENOSPC on laying out file, stopping
+rand_read: Laying out IO file (1 file / 4096MiB)
+fio: ENOSPC on laying out file, stopping
+note: both iodepth >= 1 and synchronous I/O engine are selected, queue depth will be capped at 1
+
+rand_read: (groupid=0, jobs=4): err=28 (file:filesetup.c:240, func=write, error=No space left on device): pid=191376: Fri Apr 24 11:16:32 2026
+  read: IOPS=817k, BW=3191MiB/s (3346MB/s)(187GiB/60001msec)
+    clat (nsec): min=711, max=1110.4k, avg=1043.17, stdev=269.95
+     lat (nsec): min=721, max=1110.4k, avg=1059.19, stdev=271.07
+    clat percentiles (nsec):
+     |  1.00th=[  884],  5.00th=[  916], 10.00th=[  924], 20.00th=[  940],
+     | 30.00th=[  964], 40.00th=[  988], 50.00th=[ 1004], 60.00th=[ 1020],
+     | 70.00th=[ 1048], 80.00th=[ 1080], 90.00th=[ 1256], 95.00th=[ 1336],
+     | 99.00th=[ 1480], 99.50th=[ 1720], 99.90th=[ 4704], 99.95th=[ 5472],
+     | 99.99th=[ 6496]
+   bw (  MiB/s): min= 3036, max= 3230, per=100.00%, avg=3193.65, stdev=27.38, samples=119
+   iops        : min=777441, max=827078, avg=817574.90, stdev=7008.47, samples=119
+  lat (nsec)   : 750=0.01%, 1000=44.50%
+  lat (usec)   : 2=55.18%, 4=0.22%, 10=0.10%, 20=0.01%, 50=0.01%
+  lat (usec)   : 100=0.01%, 250=0.01%
+  lat (msec)   : 2=0.01%
+  cpu          : usr=36.73%, sys=62.87%, ctx=570, majf=0, minf=11
+  IO depths    : 1=100.0%, 2=0.0%, 4=0.0%, 8=0.0%, 16=0.0%, 32=0.0%, >=64=0.0%
+     submit    : 0=0.0%, 4=100.0%, 8=0.0%, 16=0.0%, 32=0.0%, 64=0.0%, >=64=0.0%
+     complete  : 0=0.0%, 4=100.0%, 8=0.0%, 16=0.0%, 32=0.0%, 64=0.0%, >=64=0.0%
+     issued rwts: total=49021364,0,0,0 short=0,0,0,0 dropped=0,0,0,0
+
+Run status group 0 (all jobs):
+   READ: bw=3191MiB/s (3346MB/s), 3191MiB/s-3191MiB/s (3346MB/s-3346MB/s), io=187GiB (201GB), run=60001-60001msec
